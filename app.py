@@ -6,6 +6,14 @@ Tuân thủ quy tắc: Chú thích giải thích TẠI SAO, biến và hàm đ�
 
 import os
 import sys
+
+# Dam bao stdout/stderr dung ma hoa UTF-8 tren Windows console
+if sys.platform == 'win32':
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+    if hasattr(sys.stderr, 'reconfigure'):
+        sys.stderr.reconfigure(encoding='utf-8')
+
 import json
 import traceback
 from typing import Dict, List, Any, Optional
