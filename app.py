@@ -28,6 +28,7 @@ if BASE_DIR not in sys.path:
 
 from core.dynamic_loader import DynamicDataLoader, DataItem
 from core.matcher import MEMatcher, MatchResult
+from core.match_memory import MatchMemory
 from core.excel_exporter import ExcelExporter
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
@@ -35,6 +36,7 @@ app.config["SECRET_KEY"] = "me_estimator_smart_matching_pro_secret_key"
 
 # Khởi tạo các đối tượng xử lý toàn cục
 data_loader = DynamicDataLoader()
+match_memory = MatchMemory()
 matcher: Optional[MEMatcher] = None
 excel_exporter = ExcelExporter()
 
@@ -93,7 +95,7 @@ def api_load_all_default():
 
         # 1. Nạp file DATA BIGCOM
         data_loader.load_data_file(data_file_path)
-        matcher = MEMatcher(data_loader)
+        matcher = MEMatcher(data_loader, match_memory=match_memory)
 
         # 2. Nạp file FORM BÁO GIÁ
         current_form_items = read_form_file(form_file_path)
@@ -192,14 +194,30 @@ def api_change_candidate():
         if not new_item:
             return jsonify({"success": False, "error": "Không tìm thấy vật tư được chọn!"})
 
-        # Cập nhật kết quả áp giá của dòng tương ứng
+        # Cập nhật kết quả áp giá của dòng tương ứng và ghi nhớ vào MatchMemory
         for res in current_match_results:
             if res.row_idx == row_idx:
                 res.best_item = new_item
                 res.status = "exact"
                 res.score = 100
                 res.note = f"Đã chọn thủ công: {new_item.code or new_item.name}"
-                return jsonify({"success": True, "updated_item": res.to_dict()})
+                
+                # Lưu vào bộ nhớ học máy
+                match_memory.record_match(
+                    req_name=res.req_name,
+                    req_spec=res.req_spec,
+                    req_brand=res.req_brand,
+                    item_id=new_item.item_id,
+                    item_code=new_item.code,
+                    item_name=new_item.name,
+                    item_spec=new_item.spec,
+                    item_brand=new_item.brand_raw,
+                )
+                return jsonify({
+                    "success": True,
+                    "updated_item": res.to_dict(),
+                    "total_memory_records": match_memory.total_records
+                })
 
         return jsonify({"success": False, "error": f"Không tìm thấy dòng {row_idx}"})
     except Exception as e:
@@ -273,6 +291,25 @@ def read_form_file(file_path: str) -> List[Dict[str, Any]]:
 
     workbook.close()
     return rows_data
+
+
+
+@app.route("/api/memory", methods=["GET"])
+def api_get_memory():
+    """Lấy danh sách các cặp vật tư đã được học và ghi nhớ."""
+    return jsonify({
+        "success": True,
+        "total_records": match_memory.total_records,
+        "memories": match_memory.memories,
+    })
+
+
+@app.route("/api/memory/clear", methods=["POST"])
+def api_clear_memory():
+    """Xóa toàn bộ bộ nhớ học máy khi cần thiết lập lại."""
+    match_memory.memories = {}
+    match_memory.save()
+    return jsonify({"success": True, "total_records": 0})
 
 
 if __name__ == "__main__":
