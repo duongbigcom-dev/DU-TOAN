@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dự Toán Cơ Điện M&E - Smart Matching Pro V2.7.8</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+        /* Custom scrollbar for modern feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* --- ANIMATED HOURGLASS (ĐỒNG HỒ CÁT) --- */
+        .hourglass-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            animation: flipHourglass 2.4s infinite ease-in-out;
+        }
+        @keyframes flipHourglass {
+            0% { transform: rotate(0deg); }
+            45% { transform: rotate(0deg); }
+            50% { transform: rotate(180deg); }
+            95% { transform: rotate(180deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .sand-stream {
+            animation: sandFlow 2.4s infinite ease-in-out;
+        }
+        @keyframes sandFlow {
+            0%, 45% { opacity: 1; height: 30px; }
+            48%, 52% { opacity: 0; height: 0; }
+            55%, 95% { opacity: 1; height: 30px; }
+            98%, 100% { opacity: 0; height: 0; }
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- 1. HEADER BAR CHUẨN GIAO DIỆN MẪU -->
+    <header class="bg-[#0f172a] text-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-[1550px] mx-auto px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-3 flex-wrap">
+                    <span class="text-2xl font-extrabold tracking-tight flex items-center gap-2">
+                        <span class="text-amber-400">⚡</span> Dự Toán Cơ Điện M&E
+                    </span>
+                    <span class="bg-cyan-500/20 text-cyan-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-cyan-500/30">
+                        SMART MATCHING PRO
+                    </span>
+                    <span class="bg-slate-800 text-slate-300 text-xs font-medium px-2.5 py-1 rounded-full border border-slate-700">
+                        Phiên bản V2.7.8 Pro
+                    </span>
+                </div>
+                <p class="text-xs text-slate-400 mt-1">
+                    Hệ thống tự động nhận diện quy cách, ghép nối đa sheet và lập bảng giá chào thầu chuyên nghiệp
+                </p>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <div class="bg-slate-800/80 border border-slate-700 text-slate-200 text-xs font-semibold px-4 py-2 rounded-full flex items-center gap-2 shadow-inner">
+                    <span>📊</span>
+                    <span>Kho dữ liệu:</span>
+                    <span id="headerDataCount" class="text-cyan-400 font-bold text-sm">3.706</span>
+                    <span>vật tư</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-[1550px] mx-auto px-6 py-6 w-full flex-1 flex flex-col gap-6">
+
+        <!-- 2. THÔNG BÁO FILE MẪU & NẠP NHANH -->
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3.5 px-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+            <div class="flex items-center gap-3 text-sm text-amber-900 font-medium">
+                <span class="text-xl">💡</span>
+                <span>
+                    Đã tìm thấy file trong thư mục: 
+                    <strong class="text-slate-800">DATA BIGCOM.xlsx</strong>, 
+                    <strong class="text-slate-800">FORM BÁO GIÁ.xlsx</strong>.
+                </span>
+            </div>
+            <button id="btnQuickLoad" onclick="quickLoadData()" class="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-bold px-5 py-2.5 rounded-lg shadow-sm flex items-center gap-2 transition whitespace-nowrap">
+                <span>⚡</span> Nạp Nhanh Dữ Liệu Có Sẵn
+            </button>
+        </div>
+
+        <!-- 3. KHU VỰC 2 THẺ FILE (DATA & FORM) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Card 1: Data -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative hover:border-slate-300 transition">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        <span>📊</span> 1. File Cơ Sở Dữ Liệu Giá (DATA)
+                    </h2>
+                    <span id="dataStatusDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100"></span>
+                </div>
+                
+                <div class="border-2 border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-slate-50/60 hover:bg-slate-50 cursor-pointer transition">
+                    <span class="text-4xl text-amber-400 mb-2">📁</span>
+                    <p class="text-sm font-bold text-slate-700">Kéo thả file DATA vào đây</p>
+                    <p class="text-xs text-slate-400 mt-1">Tự động quét toàn bộ Sheet (DATA BIGCOM.xlsx)</p>
+                    <div id="dataLoadedNotice" class="mt-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold px-4 py-1.5 rounded-full flex items-center gap-1.5">
+                        <span>✅</span> Đã nạp: <strong id="dataFilename">DATA BIGCOM.xlsx</strong> (<span id="dataLoadedCount">3.706</span> vật tư / <span id="dataLoadedSheets">15</span> sheet)
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Form -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative hover:border-slate-300 transition">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        <span>📄</span> 2. File Mời Thầu Cần Áp Giá (FORM)
+                    </h2>
+                    <span id="formStatusDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100"></span>
+                </div>
+                
+                <div class="border-2 border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-slate-50/60 hover:bg-slate-50 cursor-pointer transition">
+                    <span class="text-4xl text-indigo-400 mb-2">📄</span>
+                    <p class="text-sm font-bold text-slate-700">Kéo thả file FORM BÁO GIÁ vào đây</p>
+                    <p class="text-xs text-slate-400 mt-1">Bảng mời thầu & thông số chào (FORM BÁO GIÁ.xlsx)</p>
+                    <div id="formLoadedNotice" class="mt-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold px-4 py-1.5 rounded-full flex items-center gap-1.5">
+                        <span>✅</span> Đã nạp: <strong id="formFilename">FORM BÁO GIÁ.xlsx</strong> (<span id="formLoadedCount">1.507</span> dòng mời thầu)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. THANH THỐNG KÊ VÀ CÁC NÚT THAO TÁC -->
+        <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <!-- 4 Badges số lượng -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1">
+                <!-- Badge 1: Tổng số -->
+                <div class="bg-purple-50 border border-purple-200/80 rounded-xl p-3.5 px-4">
+                    <div id="statTotal" class="text-2xl font-extrabold text-purple-700">1.507</div>
+                    <div class="text-[11px] font-bold text-purple-900/70 tracking-wider uppercase mt-0.5">TỔNG DÒNG VẬT TƯ</div>
+                </div>
+                <!-- Badge 2: Khớp cao -->
+                <div class="bg-emerald-50 border border-emerald-200/80 rounded-xl p-3.5 px-4 cursor-pointer hover:bg-emerald-100/60 transition" onclick="setFilter('exact')">
+                    <div id="statExact" class="text-2xl font-extrabold text-emerald-700">1.036</div>
+                    <div class="text-[11px] font-bold text-emerald-900/70 tracking-wider uppercase mt-0.5">KHỚP CAO (&gt;85%)</div>
+                </div>
+                <!-- Badge 3: Lớn hơn gần nhất -->
+                <div class="bg-amber-50 border border-amber-200/80 rounded-xl p-3.5 px-4 cursor-pointer hover:bg-amber-100/60 transition" onclick="setFilter('near')">
+                    <div id="statNear" class="text-2xl font-extrabold text-amber-700">73</div>
+                    <div class="text-[11px] font-bold text-amber-900/70 tracking-wider uppercase mt-0.5">LỚN HƠN GẦN NHẤT</div>
+                </div>
+                <!-- Badge 4: Chưa tìm thấy -->
+                <div class="bg-rose-50 border border-rose-200/80 rounded-xl p-3.5 px-4 cursor-pointer hover:bg-rose-100/60 transition" onclick="setFilter('not_found')">
+                    <div id="statNotFound" class="text-2xl font-extrabold text-rose-700">328</div>
+                    <div class="text-[11px] font-bold text-rose-900/70 tracking-wider uppercase mt-0.5">CHƯA TÌM THẤY</div>
+                </div>
+            </div>
+
+            <!-- 2 Nút Action chính -->
+            <div class="flex items-center gap-3">
+                <button id="btnAutoMatch" onclick="runAutoMatch()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold px-6 py-3.5 rounded-xl shadow-md hover:shadow-lg transition flex items-center gap-2 whitespace-nowrap">
+                    <span>⚡</span> Áp Giá Tự Động
+                </button>
+                <a id="btnExportExcel" href="/api/export_excel" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold px-6 py-3.5 rounded-xl shadow-md hover:shadow-lg transition flex items-center gap-2 whitespace-nowrap">
+                    <span>📊</span> Xuất File Excel Đã Áp Giá
+                </a>
+            </div>
+        </div>
+
+        <!-- 5. BẢNG XEM TRƯỚC KẾT QUẢ ÁP GIÁ -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm flex-1 flex flex-col overflow-hidden">
+            <!-- Header của bảng -->
+            <div class="p-5 px-6 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/50">
+                <div class="flex items-center gap-3">
+                    <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <span>🔍</span> Xem Trước Kết Quả Áp Giá Chào Thầu
+                    </h3>
+                    <div class="flex items-center gap-1.5 ml-4 text-xs">
+                        <button id="filterAll" onclick="setFilter('all')" class="px-3 py-1 rounded-md font-semibold bg-slate-800 text-white">Tất cả</button>
+                        <button id="filterExact" onclick="setFilter('exact')" class="px-3 py-1 rounded-md font-semibold bg-emerald-100 text-emerald-800 hover:bg-emerald-200">🟢 Khớp cao</button>
+                        <button id="filterNear" onclick="setFilter('near')" class="px-3 py-1 rounded-md font-semibold bg-amber-100 text-amber-800 hover:bg-amber-200">🟡 Gần nhất</button>
+                        <button id="filterNotFound" onclick="setFilter('not_found')" class="px-3 py-1 rounded-md font-semibold bg-rose-100 text-rose-800 hover:bg-rose-200">🔴 Chưa tìm thấy</button>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <span class="text-xs text-amber-700 font-medium flex items-center gap-1.5 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200">
+                        <span>💡</span> Tự động khóa thẳng hàng theo dòng thực tế của Excel
+                    </span>
+                    <input type="text" id="searchInput" oninput="renderTable()" placeholder="Tìm kiếm nhanh vật tư..." class="text-xs border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 w-52">
+                </div>
+            </div>
+
+            <!-- Bảng dữ liệu có scroll -->
+            <div class="overflow-x-auto overflow-y-auto max-h-[650px] flex-1">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead class="bg-[#0f172a] text-slate-200 uppercase tracking-wider text-[11px] sticky top-0 z-20 shadow-sm">
+                        <tr>
+                            <th class="py-3 px-3 w-16 text-center border-r border-slate-700 font-bold">STT</th>
+                            <th class="py-3 px-4 w-72 border-r border-slate-700 font-bold">Tên vật tư yêu cầu (Mời thầu)</th>
+                            <th class="py-3 px-3 w-24 text-center border-r border-slate-700 font-bold">Độ khớp</th>
+                            <th class="py-3 px-4 border-r border-slate-700 font-bold">Vật tư chào thầu (Đề xuất)</th>
+                            <th class="py-3 px-3 w-28 text-center border-r border-slate-700 font-bold">Xuất xứ</th>
+                            <th class="py-3 px-3 w-32 text-right border-r border-slate-700 font-bold">Đơn giá VT (VNĐ)</th>
+                            <th class="py-3 px-3 w-28 text-right border-r border-slate-700 font-bold">Đơn giá NC (VNĐ)</th>
+                            <th class="py-3 px-4 w-72 font-bold">Ghi chú (Tỷ lệ khớp & Thay đổi)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-slate-200 bg-white">
+                        <tr>
+                            <td colspan="8" class="text-center py-16 text-slate-400 font-medium">
+                                Đang chuẩn bị dữ liệu... Vui lòng bấm <strong>"⚡ Áp Giá Tự Động"</strong> để bắt đầu!
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- 6. MODAL ĐỒNG HỒ CÁT (HOURGLASS LOADING MODAL) -->
+    <div id="hourglassModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl flex flex-col items-center text-center border border-slate-100">
+            <!-- Animated SVG Hourglass -->
+            <div class="hourglass-container mb-6">
+                <svg viewBox="0 0 100 100" class="w-20 h-20 fill-amber-500 drop-shadow-md">
+                    <!-- Khung đồng hồ cát thủy tinh -->
+                    <path d="M 20 10 L 80 10 L 80 18 Q 80 35 55 48 L 55 52 Q 80 65 80 82 L 80 90 L 20 90 L 20 82 Q 20 65 45 52 L 45 48 Q 20 35 20 18 Z" fill="none" stroke="#334155" stroke-width="4" stroke-linejoin="round"/>
+                    <!-- Cát bóng trên -->
+                    <path d="M 26 22 L 74 22 Q 74 34 50 46 Q 26 34 26 22 Z" fill="#f59e0b"/>
+                    <!-- Tia cát chảy -->
+                    <line x1="50" y1="46" x2="50" y2="76" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" class="sand-stream"/>
+                    <!-- Đống cát bóng dưới -->
+                    <path d="M 32 86 Q 50 68 68 86 Z" fill="#f59e0b"/>
+                </svg>
+            </div>
+
+            <h4 class="text-lg font-extrabold text-slate-800">ĐANG TỰ ĐỘNG ÁP GIÁ DỰ TOÁN M&E...</h4>
+            <p id="hourglassStatusText" class="text-xs text-slate-500 mt-2 px-4 leading-relaxed">
+                Hệ thống đang khóa chặt Hãng sản xuất, bóc tách quy cách kỹ thuật và đối soát đơn giá chưa VAT từ DATA BIGCOM...
+            </p>
+
+            <div class="w-full bg-slate-100 rounded-full h-2.5 mt-6 overflow-hidden">
+                <div class="bg-gradient-to-r from-purple-500 to-indigo-600 h-2.5 rounded-full w-full animate-pulse"></div>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-3 font-medium">Vui lòng đợi trong giây lát</p>
+        </div>
+    </div>
+
+    <!-- 7. MODAL ĐỔI MÃ CHÀO THẦU (MANUAL SELECTION MODAL) -->
+    <div id="changeModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-2xl max-w-3xl w-full mx-4 shadow-2xl overflow-hidden border border-slate-200">
+            <div class="p-5 px-6 bg-slate-900 text-white flex items-center justify-between">
+                <div>
+                    <h3 class="font-bold text-sm flex items-center gap-2">
+                        <span>🔄</span> Chọn Mã Chào Thầu Thay Thế
+                    </h3>
+                    <p id="modalReqName" class="text-xs text-slate-300 mt-0.5">Vật tư: ...</p>
+                </div>
+                <button onclick="closeChangeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+            </div>
+
+            <div class="p-6 max-h-[450px] overflow-y-auto">
+                <p class="text-xs text-slate-500 mb-3">Danh sách các vật tư của cùng Hãng sản xuất trong DATA BIGCOM:</p>
+                <div id="candidatesList" class="flex flex-col gap-2.5">
+                    <!-- Candidate items rendered via JS -->
+                </div>
+            </div>
+
+            <div class="p-4 px-6 bg-slate-50 border-t border-slate-200 flex justify-end">
+                <button onclick="closeChangeModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-lg">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        let allMatchedItems = [];
+        let currentFilter = 'all';
+        let currentRowIdxForModal = null;
+
+        // Tự động kiểm tra trạng thái ban đầu khi tải trang
+        window.addEventListener('DOMContentLoaded', () => {
+            fetch('/api/status')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.data_loaded) {
+                        document.getElementById('headerDataCount').innerText = Number(data.total_data_items).toLocaleString('vi-VN');
+                        document.getElementById('dataLoadedCount').innerText = Number(data.total_data_items).toLocaleString('vi-VN');
+                        document.getElementById('dataLoadedSheets').innerText = data.total_sheets;
+                    }
+                });
+        });
+
+        // 1. NẠP NHANH DỮ LIỆU
+        function quickLoadData() {
+            showHourglass('Đang nạp toàn bộ sheet từ DATA BIGCOM và đọc FORM BÁO GIÁ...');
+            fetch('/api/load_all_default', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    hideHourglass();
+                    if (data.success) {
+                        document.getElementById('headerDataCount').innerText = Number(data.data_total_items).toLocaleString('vi-VN');
+                        document.getElementById('dataLoadedCount').innerText = Number(data.data_total_items).toLocaleString('vi-VN');
+                        document.getElementById('dataLoadedSheets').innerText = data.data_total_sheets;
+                        document.getElementById('formLoadedCount').innerText = Number(data.form_total_rows).toLocaleString('vi-VN');
+                        document.getElementById('statTotal').innerText = Number(data.form_total_rows).toLocaleString('vi-VN');
+                        alert(data.message);
+                    } else {
+                        alert('Lỗi: ' + data.error);
+                    }
+                })
+                .catch(err => {
+                    hideHourglass();
+                    alert('Lỗi kết nối máy chủ: ' + err);
+                });
+        }
+
+        // 2. CHẠY ÁP GIÁ TỰ ĐỘNG
+        function runAutoMatch() {
+            showHourglass('Hệ thống đang khóa chặt Hãng sản xuất, bóc tách quy cách kỹ thuật và đối soát đơn giá chưa VAT từ DATA BIGCOM...');
+            fetch('/api/auto_match', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    hideHourglass();
+                    if (data.success) {
+                        allMatchedItems = data.items;
+                        document.getElementById('statTotal').innerText = Number(data.total_items).toLocaleString('vi-VN');
+                        document.getElementById('statExact').innerText = Number(data.exact_count).toLocaleString('vi-VN');
+                        document.getElementById('statNear').innerText = Number(data.near_count).toLocaleString('vi-VN');
+                        document.getElementById('statNotFound').innerText = Number(data.not_found_count).toLocaleString('vi-VN');
+                        renderTable();
+                    } else {
+                        alert('Lỗi áp giá: ' + data.error);
+                    }
+                })
+                .catch(err => {
+                    hideHourglass();
+                    alert('Lỗi kết nối máy chủ: ' + err);
+                });
+        }
+
+        // 3. HIỂN THỊ DỮ LIỆU BẢNG VÀ BỘ LỌC
+        function setFilter(filterType) {
+            currentFilter = filterType;
+            ['filterAll', 'filterExact', 'filterNear', 'filterNotFound'].forEach(id => {
+                const btn = document.getElementById(id);
+                btn.className = 'px-3 py-1 rounded-md font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200';
+            });
+            if (filterType === 'all') document.getElementById('filterAll').className = 'px-3 py-1 rounded-md font-semibold bg-slate-800 text-white';
+            if (filterType === 'exact') document.getElementById('filterExact').className = 'px-3 py-1 rounded-md font-semibold bg-emerald-600 text-white';
+            if (filterType === 'near') document.getElementById('filterNear').className = 'px-3 py-1 rounded-md font-semibold bg-amber-600 text-white';
+            if (filterType === 'not_found') document.getElementById('filterNotFound').className = 'px-3 py-1 rounded-md font-semibold bg-rose-600 text-white';
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            let filtered = allMatchedItems.filter(item => {
+                if (currentFilter !== 'all' && item.status !== currentFilter) return false;
+                if (keyword) {
+                    const text = `${item.req_name} ${item.req_brand} ${item.offer.name} ${item.offer.code}`.toLowerCase();
+                    if (!text.includes(keyword)) return false;
+                }
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-12 text-slate-400 font-medium">Không tìm thấy dòng vật tư nào phù hợp với bộ lọc!</td></tr>`;
+                return;
+            }
+
+            // Hiển thị tối đa 250 dòng một lần để cuộn mượt mà
+            let rowsHtml = '';
+            filtered.slice(0, 250).forEach(item => {
+                let badgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                if (item.status === 'near') badgeClass = 'bg-amber-100 text-amber-800 border-amber-300';
+                if (item.status === 'not_found') badgeClass = 'bg-rose-100 text-rose-800 border-rose-300';
+
+                let priceMatStr = item.offer.price_mat > 0 ? Number(item.offer.price_mat).toLocaleString('vi-VN') : '-';
+                let priceLabStr = item.offer.price_lab > 0 ? Number(item.offer.price_lab).toLocaleString('vi-VN') : '-';
+
+                rowsHtml += `
+                <tr class="hover:bg-slate-50/80 transition border-b border-slate-100">
+                    <td class="py-3 px-3 text-center text-slate-500 font-medium border-r border-slate-100">
+                        ${item.req_stt}
+                    </td>
+                    <td class="py-3 px-4 border-r border-slate-100">
+                        <div class="font-bold text-slate-800">${item.req_name}</div>
+                        <div class="text-[11px] text-slate-400 mt-0.5">${item.req_brand || 'Không có hãng'}</div>
+                    </td>
+                    <td class="py-3 px-3 text-center border-r border-slate-100">
+                        <span class="inline-block text-xs font-bold px-2.5 py-1 rounded-full border ${badgeClass}">
+                            ${item.score}%
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 border-r border-slate-100">
+                        ${item.offer.name ? `
+                            <div class="font-bold text-slate-800">${item.offer.name}</div>
+                            <div class="text-[11px] text-slate-500 mt-0.5">
+                                Thông số: ${item.offer.spec || '-'} | Mã: ${item.offer.code || '-'} | Hãng: ${item.offer.brand || '-'}
+                            </div>
+                            <button onclick="openChangeModal(${item.row_idx})" class="mt-1.5 text-[11px] text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1 hover:underline">
+                                <span>🔄</span> Đổi mã chào thầu
+                            </button>
+                        ` : `
+                            <span class="text-rose-500 italic font-medium">Chưa tìm thấy mã chào thầu phù hợp</span>
+                        `}
+                    </td>
+                    <td class="py-3 px-3 text-center text-slate-600 border-r border-slate-100">
+                        ${item.offer.origin || '-'}
+                    </td>
+                    <td class="py-3 px-3 text-right font-bold text-slate-900 border-r border-slate-100">
+                        ${priceMatStr}
+                    </td>
+                    <td class="py-3 px-3 text-right text-slate-600 border-r border-slate-100">
+                        ${priceLabStr}
+                    </td>
+                    <td class="py-3 px-4 text-slate-600 text-[11px] leading-relaxed">
+                        ${item.note || '-'}
+                    </td>
+                </tr>
+                `;
+            });
+
+            if (filtered.length > 250) {
+                rowsHtml += `
+                <tr>
+                    <td colspan="8" class="text-center py-4 bg-slate-50 text-slate-500 text-xs italic">
+                        Đang hiển thị 250 / ${filtered.length} dòng. Hãy dùng ô tìm kiếm hoặc xuất file Excel để xem toàn bộ 1.507 dòng.
+                    </td>
+                </tr>
+                `;
+            }
+
+            tbody.innerHTML = rowsHtml;
+        }
+
+        // 4. MODAL ĐỒNG HỒ CÁT
+        function showHourglass(msg) {
+            document.getElementById('hourglassStatusText').innerText = msg;
+            document.getElementById('hourglassModal').classList.remove('hidden');
+        }
+        function hideHourglass() {
+            document.getElementById('hourglassModal').classList.add('hidden');
+        }
+
+        // 5. MODAL ĐỔI MÃ CHÀO THẦU
+        function openChangeModal(rowIdx) {
+            currentRowIdxForModal = rowIdx;
+            const item = allMatchedItems.find(i => i.row_idx === rowIdx);
+            if (!item) return;
+
+            document.getElementById('modalReqName').innerText = `Vật tư: ${item.req_name} (Hãng: ${item.req_brand})`;
+            const listDiv = document.getElementById('candidatesList');
+
+            if (!item.candidates || item.candidates.length === 0) {
+                listDiv.innerHTML = `<p class="text-slate-400 italic">Không có ứng viên nào khác của Hãng này.</p>`;
+            } else {
+                let html = '';
+                item.candidates.forEach(cand => {
+                    const priceMat = Number(cand.price_mat).toLocaleString('vi-VN');
+                    const priceLab = Number(cand.price_lab).toLocaleString('vi-VN');
+                    html += `
+                    <div class="border border-slate-200 rounded-xl p-3.5 flex items-center justify-between hover:border-indigo-300 hover:bg-indigo-50/30 transition">
+                        <div>
+                            <div class="font-bold text-slate-800 text-xs">${cand.name}</div>
+                            <div class="text-[11px] text-slate-500 mt-0.5">Mã: <strong>${cand.code || '-'}</strong> | Quy cách: ${cand.spec || '-'}</div>
+                            <div class="text-[11px] text-slate-600 mt-1">
+                                Giá VT: <strong class="text-indigo-700">${priceMat} đ</strong> | Giá NC: ${priceLab} đ | Điểm khớp: <span class="font-bold text-emerald-600">${cand.score}%</span>
+                            </div>
+                        </div>
+                        <button onclick="selectCandidate(${rowIdx}, ${cand.item_id})" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg shadow-sm whitespace-nowrap">
+                            Chọn mã này
+                        </button>
+                    </div>
+                    `;
+                });
+                listDiv.innerHTML = html;
+            }
+
+            document.getElementById('changeModal').classList.remove('hidden');
+        }
+
+        function closeChangeModal() {
+            document.getElementById('changeModal').classList.add('hidden');
+        }
+
+        function selectCandidate(rowIdx, itemId) {
+            fetch('/api/change_candidate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ row_idx: rowIdx, item_id: itemId })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const idx = allMatchedItems.findIndex(i => i.row_idx === rowIdx);
+                    if (idx !== -1) {
+                        allMatchedItems[idx] = data.updated_item;
+                        renderTable();
+                    }
+                    closeChangeModal();
+                } else {
+                    alert('Lỗi: ' + data.error);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+
