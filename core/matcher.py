@@ -18,6 +18,7 @@ from core.normalizer import (
     get_me_category_tags,
 )
 from core.dynamic_loader import DataItem, DynamicDataLoader
+from core.match_memory import MatchMemory
 
 
 class MatchResult:
@@ -92,8 +93,9 @@ class MEMatcher:
     """
     Bộ máy so khớp chuyên dụng cho hệ Cơ Điện M&E.
     """
-    def __init__(self, data_loader: DynamicDataLoader):
+    def __init__(self, data_loader: DynamicDataLoader, match_memory: Optional[MatchMemory] = None):
         self.loader = data_loader
+        self.memory = match_memory or MatchMemory()
 
     def match_item(
         self,
@@ -145,6 +147,27 @@ class MEMatcher:
                 if syn in combined_req_text:
                     normalized_req_brand = canonical
                     break
+
+        # 1.1. KIỂM TRA BỘ NHỚ HỌC MÁY (MATCH MEMORY) TỪ LỊCH SỬ CHỌN THỦ CÔNG
+        remembered = self.memory.find_match(req_name, req_spec, req_brand)
+        if remembered:
+            target_id = remembered.get("target_item_id")
+            target_item = next((item for item in self.loader.all_items if item.item_id == target_id), None)
+            if target_item:
+                return MatchResult(
+                    row_idx=row_idx,
+                    req_stt=req_stt,
+                    req_name=req_name,
+                    req_spec=req_spec,
+                    req_code=req_code,
+                    req_brand=req_brand,
+                    req_unit=req_unit,
+                    req_qty=req_qty,
+                    status="exact",
+                    score=100,
+                    best_item=target_item,
+                    note=f"Khớp từ bộ nhớ học máy (đã nhớ {remembered.get('match_count', 1)} lần)",
+                )
 
         # Nếu vẫn không xác định được Hãng hoặc Hãng chưa có trong kho dữ liệu Bigcom
         if not normalized_req_brand or normalized_req_brand not in self.loader.items_by_brand:

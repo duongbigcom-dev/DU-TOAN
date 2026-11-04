@@ -173,6 +173,9 @@
 
             <!-- 2 Nút Action chính -->
             <div class="flex items-center gap-3">
+                <button id="btnMemory" onclick="openMemoryModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-bold px-4 py-3.5 rounded-xl shadow-sm transition flex items-center gap-1.5 whitespace-nowrap" title="Xem các quy tắc vật tư đã được AI ghi nhớ">
+                    <span>🧠</span> Bộ Nhớ AI (<span id="memoryBadgeCount" class="text-indigo-600 font-extrabold">0</span>)
+                </button>
                 <button id="btnAutoMatch" onclick="runAutoMatch()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold px-6 py-3.5 rounded-xl shadow-md hover:shadow-lg transition flex items-center gap-2 whitespace-nowrap">
                     <span>⚡</span> Áp Giá Tự Động
                 </button>
@@ -518,13 +521,117 @@
                         allMatchedItems[idx] = data.updated_item;
                         renderTable();
                     }
+                    if (data.total_memory_records !== undefined) {
+                        updateMemoryBadge(data.total_memory_records);
+                    }
                     closeChangeModal();
                 } else {
                     alert('Lỗi: ' + data.error);
                 }
             });
         }
+
+        // 6. QUẢN LÝ BỘ NHỚ HỌC MÁY (MATCH MEMORY)
+        function updateMemoryBadge(count) {
+            const el = document.getElementById('memoryBadgeCount');
+            if (el) el.innerText = count;
+        }
+
+        function loadMemoryCount() {
+            fetch('/api/memory')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        updateMemoryBadge(data.total_records);
+                    }
+                })
+                .catch(() => {});
+        }
+
+        function openMemoryModal() {
+            fetch('/api/memory')
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success) return;
+                    document.getElementById('modalMemoryCount').innerText = data.total_records;
+                    const container = document.getElementById('memoryListContainer');
+                    const keys = Object.keys(data.memories || {});
+                    if (keys.length === 0) {
+                        container.innerHTML = '<div class="text-center py-8 text-slate-400 text-xs italic">Chưa có quy tắc nào. Khi bạn bấm "Đổi mã chào thầu" cho một dòng, hệ thống sẽ tự động học và lưu tại đây.</div>';
+                    } else {
+                        let html = '';
+                        keys.forEach(k => {
+                            const m = data.memories[k];
+                            html += `
+                            <div class="border border-slate-200 rounded-xl p-3 bg-slate-50/50 hover:bg-white text-xs">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">Yêu cầu: ${m.req_brand || 'Mọi hãng'}</span>
+                                    <span class="text-[11px] text-emerald-600 font-semibold">Đã áp dụng: ${m.match_count || 1} lần</span>
+                                </div>
+                                <div class="text-slate-700 font-medium">📋 <strong>${m.req_name}</strong> - <em>${m.req_spec || '(không có quy cách)'}</em></div>
+                                <div class="mt-1 text-slate-500 flex items-center gap-1.5">
+                                    <span>👉</span> Đã gán vào: <strong class="text-slate-800">${m.target_item_name}</strong> [Mã: ${m.target_item_code || '-'}] (Hãng: ${m.target_item_brand || '-'})
+                                </div>
+                            </div>
+                            `;
+                        });
+                        container.innerHTML = html;
+                    }
+                    document.getElementById('memoryModal').classList.remove('hidden');
+                });
+        }
+
+        function closeMemoryModal() {
+            document.getElementById('memoryModal').classList.add('hidden');
+        }
+
+        function clearAllMemory() {
+            if (!confirm('Bạn có chắc chắn muốn xóa toàn bộ bộ nhớ học máy? Các dòng sẽ quay về so khớp tự động mặc định.')) return;
+            fetch('/api/memory/clear', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        updateMemoryBadge(0);
+                        openMemoryModal();
+                    }
+                });
+        }
+
+        // Tự động tải số lượng bộ nhớ khi mở trang
+        document.addEventListener('DOMContentLoaded', loadMemoryCount);
     </script>
+
+    <!-- MODAL BỘ NHỚ HỌC MÁY (MATCH MEMORY) -->
+    <div id="memoryModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl border border-slate-200 flex flex-col max-h-[85vh]">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🧠</span>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800">Bộ Nhớ Ghép Nối AI (Match Memory)</h3>
+                        <p class="text-xs text-slate-500">Tự động ghi nhớ các lựa chọn thủ công của kỹ sư để tự động áp dụng 100% cho các lần sau.</p>
+                    </div>
+                </div>
+                <button onclick="closeMemoryModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold p-1">✕</button>
+            </div>
+            
+            <div class="my-4 flex items-center justify-between bg-indigo-50/70 p-3 rounded-xl border border-indigo-100 text-xs text-indigo-900">
+                <span>Hiện đã ghi nhớ <strong id="modalMemoryCount" class="font-extrabold text-indigo-700">0</strong> quy tắc gán vật tư.</span>
+                <button onclick="clearAllMemory()" class="text-rose-600 hover:text-rose-800 font-bold hover:underline">Xóa toàn bộ bộ nhớ</button>
+            </div>
+
+            <div id="memoryListContainer" class="overflow-y-auto flex-1 space-y-2 pr-1">
+                <!-- Danh sách item memory sẽ render tại đây -->
+            </div>
+
+            <div class="pt-4 border-t border-slate-200 flex justify-end">
+                <button onclick="closeMemoryModal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl shadow-sm">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
 
