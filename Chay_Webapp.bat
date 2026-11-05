@@ -2,21 +2,22 @@
 chcp 65001 >nul
 set PYTHONIOENCODING=utf-8
 set PYTHONUTF8=1
-title DU TOAN CO DIEN M^&E - SMART MATCHING PRO V2.7.8
+title DỰ TOÁN CƠ ĐIỆN M^&E - BIGCOM SMART MATCHING PRO V2.8
 color 0B
 
 echo ======================================================================
-echo    PHAN MEM AP GIA TU DONG DU TOAN CO DIEN M^&E (SMART MATCHING PRO)
+echo    CÔNG TY CƠ ĐIỆN BIGCOM - HỆ THỐNG DỰ TOÁN ÁP GIÁ TỰ ĐỘNG
+echo                   SMART MATCHING PRO V2.8
 echo ======================================================================
 echo.
 
-REM 1. Chuyen thu muc lam viec ve thu muc chua file .bat
+REM 1. Chuyển thư mục làm việc về thư mục chứa file .bat
 cd /d "%~dp0"
 
-REM 2. Tu dong do tim duong dan Python hop le
+REM 2. Tự động dò tìm đường dẫn Python hợp lệ
 set "PYTHON_CMD="
 
-REM Uu tien cac duong dan cai dat truc tiep cua nguoi dung
+REM Ưu tiên các đường dẫn cài đặt trực tiếp của người dùng
 if exist "%LOCALAPPDATA%\Programs\Python\Python311\python.exe" (
     set "PYTHON_CMD=%LOCALAPPDATA%\Programs\Python\Python311\python.exe"
     goto found_python
@@ -34,7 +35,7 @@ if exist "%LOCALAPPDATA%\Programs\Python\Python310\python.exe" (
     goto found_python
 )
 
-REM Kiem tra Program Files hoac C:\Python
+REM Kiểm tra Program Files hoặc C:\Python
 if exist "C:\Program Files\Python311\python.exe" (
     set "PYTHON_CMD=C:\Program Files\Python311\python.exe"
     goto found_python
@@ -52,13 +53,13 @@ if exist "C:\Python312\python.exe" (
     goto found_python
 )
 
-REM Kiem tra qua py launcher neu co
+REM Kiểm tra qua py launcher nếu có
 for /f "delims=" %%I in ('py -3 -c "import sys; print(sys.executable)" 2^>nul') do (
     set "PYTHON_CMD=%%I"
     goto found_python
 )
 
-REM Kiem tra python tren bien moi truong PATH
+REM Kiểm tra python trên biến môi trường PATH
 for /f "delims=" %%I in ('python -c "import sys; print(sys.executable)" 2^>nul') do (
     set "PYTHON_CMD=%%I"
     goto found_python
@@ -67,64 +68,77 @@ for /f "delims=" %%I in ('python -c "import sys; print(sys.executable)" 2^>nul')
 :found_python
 if not defined PYTHON_CMD goto python_not_found
 
-echo [*] Dang kiem tra moi truong Python...
-echo [*] Tim thay Python tai: "%PYTHON_CMD%"
+echo [*] Đang kiểm tra môi trường Python...
+echo [*] Tìm thấy Python tại: "%PYTHON_CMD%"
 "%PYTHON_CMD%" --version
 echo.
 
-REM 3. Kiem tra thu vien can thiet
-echo [*] Dang kiem tra thu vien Flask va Openpyxl...
+REM 3. Kiểm tra thư viện cần thiết
+echo [*] Đang kiểm tra thư viện Flask và Openpyxl...
 "%PYTHON_CMD%" -c "import flask, openpyxl" >nul 2>&1
 if errorlevel 1 (
-    echo [*] Dang tu dong cai dat thu vien flask va openpyxl...
+    echo [*] Đang tự động cài đặt thư viện flask và openpyxl...
     "%PYTHON_CMD%" -m pip install flask openpyxl
     if errorlevel 1 (
-        echo [!] Cai dat thu vien that bai. Vui long kiem tra ket noi mang.
+        echo [!] Cài đặt thư viện thất bại. Đang mở Web App độc lập BC_SMP.html...
+        start "" "%~dp0BC_SMP.html"
         pause
         exit /b 1
     )
 )
-echo [*] Thu vien da san sang!
+echo [*] Thư viện đã sẵn sàng!
 echo.
 
-REM 4. Khoi dong Web App va mo trinh duyet
-echo [*] Dang khoi dong Web App tai dia chi: http://127.0.0.1:5000 ...
-echo [*] Trinh duyet se tu dong mo sau 2 giay...
+REM 4. Khởi động Web App (app.py sẽ tự động mở trình duyệt web)
+echo [*] Đang khởi động Web App máy chủ...
+echo [*] Trình duyệt web sẽ tự động mở ngay khi máy chủ sẵn sàng!
+echo.
+echo (Nhấn Ctrl+C trong cửa sổ này nếu muốn dừng máy chủ)
+echo ======================================================================
 echo.
 
-start "" cmd /c "timeout /t 2 /nobreak >nul & start http://127.0.0.1:5000"
 "%PYTHON_CMD%" app.py
+
+REM 5. Nếu máy chủ gặp sự cố dừng đột ngột, tự động mở file HTML độc lập
+if errorlevel 1 (
+    echo.
+    echo ======================================================================
+    echo [!] Máy chủ gặp sự cố dừng đột ngột.
+    echo [*] Đang tự động mở bản Web App độc lập BC_SMP.html trên trình duyệt...
+    echo ======================================================================
+    start "" "%~dp0BC_SMP.html"
+)
 
 pause
 exit /b 0
 
 :python_not_found
 echo ======================================================================
-echo [!] KHONG TIM THAY PYTHON TREN MAY TINH!
+echo [!] KHÔNG TÌM THẤY PYTHON TRÊN MÁY TÍNH!
 echo ======================================================================
 echo.
-echo Ban co the chon mot trong cac lua chon sau:
+echo Bạn có thể chọn một trong các lựa chọn sau:
 echo.
-echo  [1] Tu dong cai dat Python 3.11 ngay bay gio qua winget
-echo  [2] Mo ban Web App doc lap BC_SMP.html tren trinh duyet
-echo  [3] Thoat
+echo  [1] Tự động cài đặt Python 3.11 ngay bây giờ qua winget
+echo  [2] Mở ngay bản Web App độc lập BC_SMP.html (chạy trực tiếp trên trình duyệt)
+echo  [3] Thoát
 echo.
-set /p CHOICE="Nhap lua chon [1/2/3] roi nhan Enter: "
+set /p CHOICE="Nhập lựa chọn [1/2/3] rồi nhấn Enter: "
 
 if "%CHOICE%"=="1" (
     echo.
-    echo [*] Dang tai va cai dat Python 3.11... Vui long cho...
+    echo [*] Đang tải và cài đặt Python 3.11... Vui lòng chờ...
     winget install Python.Python.3.11 --scope user --accept-package-agreements --accept-source-agreements
     echo.
-    echo [*] Cai dat hoan tat! Vui long chay lai file Chay_Webapp.bat.
+    echo [*] Cài đặt hoàn tất! Vui lòng chạy lại file Chay_Webapp.bat.
     pause
     exit /b 0
 )
 
 if "%CHOICE%"=="2" (
     echo.
-    echo [*] Dang mo Web App doc lap BC_SMP.html tren trinh duyet...
-    start "" "BC_SMP.html"
+    echo [*] Đang mở Web App độc lập BC_SMP.html trên trình duyệt...
+    start "" "%~dp0BC_SMP.html"
     exit /b 0
 )
 

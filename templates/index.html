@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dự Toán Cơ Điện M&E - Smart Matching Pro V2.7.8</title>
+    <title>Dự Toán Cơ Điện M&E - Smart Matching Pro V2.8</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Inter -->
@@ -68,7 +68,7 @@
                         SMART MATCHING PRO
                     </span>
                     <span class="bg-slate-800 text-slate-300 text-xs font-medium px-2.5 py-1 rounded-full border border-slate-700">
-                        Phiên bản V2.7.8 Pro
+                        Phiên bản V2.8 Pro
                     </span>
                 </div>
                 <p class="text-xs text-slate-400 mt-1">
@@ -77,6 +77,9 @@
             </div>
 
             <div class="flex items-center gap-3">
+                <a href="/standalone" target="_blank" class="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold px-3 py-2 rounded-full border border-slate-700 transition flex items-center gap-1.5 shadow-sm" title="Mở bản Web App độc lập chạy trực tiếp trên trình duyệt">
+                    <span>🌐</span> Bản Độc Lập (Offline)
+                </a>
                 <div class="bg-slate-800/80 border border-slate-700 text-slate-200 text-xs font-semibold px-4 py-2 rounded-full flex items-center gap-2 shadow-inner">
                     <span>📊</span>
                     <span>Kho dữ liệu:</span>
@@ -104,6 +107,10 @@
             </button>
         </div>
 
+        <!-- Hidden File Inputs -->
+        <input type="file" id="inputDataFile" accept=".xlsx" class="hidden" onchange="if(this.files[0]) uploadDataFile(this.files[0])">
+        <input type="file" id="inputFormFile" accept=".xlsx" class="hidden" onchange="if(this.files[0]) uploadFormFile(this.files[0])">
+
         <!-- 3. KHU VỰC 2 THẺ FILE (DATA & FORM) -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Card 1: Data -->
@@ -115,9 +122,13 @@
                     <span id="dataStatusDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100"></span>
                 </div>
                 
-                <div class="border-2 border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-slate-50/60 hover:bg-slate-50 cursor-pointer transition">
+                <div onclick="document.getElementById('inputDataFile').click()"
+                     ondragover="event.preventDefault(); this.classList.add('border-indigo-500', 'bg-indigo-50/40')"
+                     ondragleave="this.classList.remove('border-indigo-500', 'bg-indigo-50/40')"
+                     ondrop="event.preventDefault(); this.classList.remove('border-indigo-500', 'bg-indigo-50/40'); if(event.dataTransfer.files[0]) uploadDataFile(event.dataTransfer.files[0])"
+                     class="border-2 border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-slate-50/60 hover:bg-slate-50 cursor-pointer transition">
                     <span class="text-4xl text-amber-400 mb-2">📁</span>
-                    <p class="text-sm font-bold text-slate-700">Kéo thả file DATA vào đây</p>
+                    <p class="text-sm font-bold text-slate-700">Kéo thả file DATA vào đây hoặc bấm để chọn</p>
                     <p class="text-xs text-slate-400 mt-1">Tự động quét toàn bộ Sheet (DATA BIGCOM.xlsx)</p>
                     <div id="dataLoadedNotice" class="mt-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold px-4 py-1.5 rounded-full flex items-center gap-1.5">
                         <span>✅</span> Đã nạp: <strong id="dataFilename">DATA BIGCOM.xlsx</strong> (<span id="dataLoadedCount">3.706</span> vật tư / <span id="dataLoadedSheets">15</span> sheet)
@@ -129,49 +140,49 @@
             <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative hover:border-slate-300 transition">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                        <span>📄</span> 2. File Mời Thầu Cần Áp Giá (FORM)
+                        <span>📋</span> 2. File Mời Thầu Cần Áp Giá (FORM)
                     </h2>
                     <span id="formStatusDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100"></span>
                 </div>
                 
-                <div class="border-2 border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-slate-50/60 hover:bg-slate-50 cursor-pointer transition">
-                    <span class="text-4xl text-indigo-400 mb-2">📄</span>
-                    <p class="text-sm font-bold text-slate-700">Kéo thả file FORM BÁO GIÁ vào đây</p>
+                <div onclick="document.getElementById('inputFormFile').click()"
+                     ondragover="event.preventDefault(); this.classList.add('border-indigo-500', 'bg-indigo-50/40')"
+                     ondragleave="this.classList.remove('border-indigo-500', 'bg-indigo-50/40')"
+                     ondrop="event.preventDefault(); this.classList.remove('border-indigo-500', 'bg-indigo-50/40'); if(event.dataTransfer.files[0]) uploadFormFile(event.dataTransfer.files[0])"
+                     class="border-2 border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-slate-50/60 hover:bg-slate-50 cursor-pointer transition">
+                    <span class="text-4xl text-indigo-400 mb-2">📋</span>
+                    <p class="text-sm font-bold text-slate-700">Kéo thả file FORM BÁO GIÁ vào đây hoặc bấm để chọn</p>
                     <p class="text-xs text-slate-400 mt-1">Bảng mời thầu & thông số chào (FORM BÁO GIÁ.xlsx)</p>
                     <div id="formLoadedNotice" class="mt-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold px-4 py-1.5 rounded-full flex items-center gap-1.5">
-                        <span>✅</span> Đã nạp: <strong id="formFilename">FORM BÁO GIÁ.xlsx</strong> (<span id="formLoadedCount">1.507</span> dòng mời thầu)
+                        <span>✅</span> Đã nạp: <strong id="formFilename">FORM BÁO GIÁ.xlsx</strong> (<span id="formLoadedCount">1.437</span> dòng mời thầu)
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 4. THANH THỐNG KÊ VÀ CÁC NÚT THAO TÁC -->
-        <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-            <!-- 4 Badges số lượng -->
+        <!-- 4. THANH ĐIỀU KHIỂN & THỐNG KÊ (4 Ô THỐNG KÊ MÀU) -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <!-- 4 Thống kê -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1">
-                <!-- Badge 1: Tổng số -->
-                <div class="bg-purple-50 border border-purple-200/80 rounded-xl p-3.5 px-4">
-                    <div id="statTotal" class="text-2xl font-extrabold text-purple-700">1.507</div>
-                    <div class="text-[11px] font-bold text-purple-900/70 tracking-wider uppercase mt-0.5">TỔNG DÒNG VẬT TƯ</div>
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col">
+                    <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Tổng số dòng</span>
+                    <span id="statTotal" class="text-xl font-extrabold text-slate-800 mt-0.5">0</span>
                 </div>
-                <!-- Badge 2: Khớp cao -->
-                <div class="bg-emerald-50 border border-emerald-200/80 rounded-xl p-3.5 px-4 cursor-pointer hover:bg-emerald-100/60 transition" onclick="setFilter('exact')">
-                    <div id="statExact" class="text-2xl font-extrabold text-emerald-700">1.036</div>
-                    <div class="text-[11px] font-bold text-emerald-900/70 tracking-wider uppercase mt-0.5">KHỚP CAO (&gt;85%)</div>
+                <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100 flex flex-col">
+                    <span class="text-[11px] font-semibold text-emerald-600 uppercase tracking-wide">Khớp cao (>90%)</span>
+                    <span id="statExact" class="text-xl font-extrabold text-emerald-600 mt-0.5">0</span>
                 </div>
-                <!-- Badge 3: Lớn hơn gần nhất -->
-                <div class="bg-amber-50 border border-amber-200/80 rounded-xl p-3.5 px-4 cursor-pointer hover:bg-amber-100/60 transition" onclick="setFilter('near')">
-                    <div id="statNear" class="text-2xl font-extrabold text-amber-700">73</div>
-                    <div class="text-[11px] font-bold text-amber-900/70 tracking-wider uppercase mt-0.5">LỚN HƠN GẦN NHẤT</div>
+                <div class="bg-amber-50 p-3 rounded-xl border border-amber-100 flex flex-col">
+                    <span class="text-[11px] font-semibold text-amber-600 uppercase tracking-wide">Gần nhất (Upsize)</span>
+                    <span id="statNear" class="text-xl font-extrabold text-amber-600 mt-0.5">0</span>
                 </div>
-                <!-- Badge 4: Chưa tìm thấy -->
-                <div class="bg-rose-50 border border-rose-200/80 rounded-xl p-3.5 px-4 cursor-pointer hover:bg-rose-100/60 transition" onclick="setFilter('not_found')">
-                    <div id="statNotFound" class="text-2xl font-extrabold text-rose-700">328</div>
-                    <div class="text-[11px] font-bold text-rose-900/70 tracking-wider uppercase mt-0.5">CHƯA TÌM THẤY</div>
+                <div class="bg-rose-50 p-3 rounded-xl border border-rose-100 flex flex-col">
+                    <span class="text-[11px] font-semibold text-rose-600 uppercase tracking-wide">Chưa tìm thấy</span>
+                    <span id="statNotFound" class="text-xl font-extrabold text-rose-600 mt-0.5">0</span>
                 </div>
             </div>
 
-            <!-- 2 Nút Action chính -->
+            <!-- Các Nút Action chính -->
             <div class="flex items-center gap-3">
                 <button id="btnMemory" onclick="openMemoryModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-bold px-4 py-3.5 rounded-xl shadow-sm transition flex items-center gap-1.5 whitespace-nowrap" title="Xem các quy tắc vật tư đã được AI ghi nhớ">
                     <span>🧠</span> Bộ Nhớ AI (<span id="memoryBadgeCount" class="text-indigo-600 font-extrabold">0</span>)
@@ -196,7 +207,7 @@
                     <div class="flex items-center gap-1.5 ml-4 text-xs">
                         <button id="filterAll" onclick="setFilter('all')" class="px-3 py-1 rounded-md font-semibold bg-slate-800 text-white">Tất cả</button>
                         <button id="filterExact" onclick="setFilter('exact')" class="px-3 py-1 rounded-md font-semibold bg-emerald-100 text-emerald-800 hover:bg-emerald-200">🟢 Khớp cao</button>
-                        <button id="filterNear" onclick="setFilter('near')" class="px-3 py-1 rounded-md font-semibold bg-amber-100 text-amber-800 hover:bg-amber-200">🟡 Gần nhất</button>
+                        <button id="filterNear" onclick="setFilter('near')" class="px-3 py-1 rounded-md font-semibold bg-amber-100 text-amber-800 hover:bg-amber-200">🟡 Gần nhất / Upsize</button>
                         <button id="filterNotFound" onclick="setFilter('not_found')" class="px-3 py-1 rounded-md font-semibold bg-rose-100 text-rose-800 hover:bg-rose-200">🔴 Chưa tìm thấy</button>
                     </div>
                 </div>
@@ -227,7 +238,7 @@
                     <tbody id="tableBody" class="divide-y divide-slate-200 bg-white">
                         <tr>
                             <td colspan="8" class="text-center py-16 text-slate-400 font-medium">
-                                Đang chuẩn bị dữ liệu... Vui lòng bấm <strong>"⚡ Áp Giá Tự Động"</strong> để bắt đầu!
+                                Đang chuẩn bị dữ liệu... Vui lòng bấm <strong>"⚡ Áp Giá Tự Động"</strong> hoặc <strong>"⚡ Nạp Nhanh Dữ Liệu Có Sẵn"</strong> để bắt đầu!
                             </td>
                         </tr>
                     </tbody>
@@ -248,21 +259,20 @@
                     <!-- Cát bóng trên -->
                     <path d="M 26 22 L 74 22 Q 74 34 50 46 Q 26 34 26 22 Z" fill="#f59e0b"/>
                     <!-- Tia cát chảy -->
-                    <line x1="50" y1="46" x2="50" y2="76" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" class="sand-stream"/>
-                    <!-- Đống cát bóng dưới -->
-                    <path d="M 32 86 Q 50 68 68 86 Z" fill="#f59e0b"/>
+                    <rect x="48" y="48" width="4" height="28" fill="#d97706" class="sand-stream"/>
+                    <!-- Đụn cát dưới -->
+                    <path d="M 30 78 Q 50 68 70 78 L 74 82 L 26 82 Z" fill="#b45309"/>
                 </svg>
             </div>
-
-            <h4 class="text-lg font-extrabold text-slate-800">ĐANG TỰ ĐỘNG ÁP GIÁ DỰ TOÁN M&E...</h4>
+            
+            <h3 class="text-base font-bold text-slate-800">Đang Xử Lý Áp Giá Tự Động</h3>
             <p id="hourglassStatusText" class="text-xs text-slate-500 mt-2 px-4 leading-relaxed">
                 Hệ thống đang khóa chặt Hãng sản xuất, bóc tách quy cách kỹ thuật và đối soát đơn giá chưa VAT từ DATA BIGCOM...
             </p>
-
-            <div class="w-full bg-slate-100 rounded-full h-2.5 mt-6 overflow-hidden">
-                <div class="bg-gradient-to-r from-purple-500 to-indigo-600 h-2.5 rounded-full w-full animate-pulse"></div>
+            <div class="mt-6 flex items-center gap-2 text-[11px] font-semibold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full">
+                <span class="inline-block w-2 h-2 rounded-full bg-indigo-600 animate-ping"></span>
+                <span>Thuật toán Smart Matching Pro 4 Tầng đang phân tích...</span>
             </div>
-            <p class="text-[11px] text-slate-400 mt-3 font-medium">Vui lòng đợi trong giây lát</p>
         </div>
     </div>
 
@@ -274,11 +284,11 @@
                     <h3 class="font-bold text-sm flex items-center gap-2">
                         <span>🔄</span> Chọn Mã Chào Thầu Thay Thế
                     </h3>
-                    <p id="modalReqName" class="text-xs text-slate-300 mt-0.5">Vật tư: ...</p>
+                    <p id="modalReqName" class="text-xs text-slate-300 mt-0.5 font-medium"></p>
                 </div>
-                <button onclick="closeChangeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+                <button onclick="closeChangeModal()" class="text-slate-400 hover:text-white text-lg font-bold">✕</button>
             </div>
-
+            
             <div class="p-6 max-h-[450px] overflow-y-auto">
                 <p class="text-xs text-slate-500 mb-3">Danh sách các vật tư của cùng Hãng sản xuất trong DATA BIGCOM:</p>
                 <div id="candidatesList" class="flex flex-col gap-2.5">
@@ -287,12 +297,45 @@
             </div>
 
             <div class="p-4 px-6 bg-slate-50 border-t border-slate-200 flex justify-end">
-                <button onclick="closeChangeModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-lg">Đóng</button>
+                <button onclick="closeChangeModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-xs rounded-xl">
+                    Hủy bỏ
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
+    <!-- MODAL BỘ NHỚ HỌC MÁY (MATCH MEMORY) -->
+    <div id="memoryModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl border border-slate-200 flex flex-col max-h-[85vh]">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🧠</span>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800">Bộ Nhớ Ghép Nối AI (Match Memory)</h3>
+                        <p class="text-xs text-slate-500">Tự động ghi nhớ các lựa chọn thủ công của kỹ sư để tự động áp dụng 100% cho các lần sau.</p>
+                    </div>
+                </div>
+                <button onclick="closeMemoryModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold p-1">✕</button>
+            </div>
+            
+            <div class="my-4 flex items-center justify-between bg-indigo-50/70 p-3 rounded-xl border border-indigo-100 text-xs text-indigo-900">
+                <span>Hiện đã ghi nhớ <strong id="modalMemoryCount" class="font-extrabold text-indigo-700">0</strong> quy tắc gán vật tư.</span>
+                <button onclick="clearAllMemory()" class="text-rose-600 hover:text-rose-800 font-bold hover:underline">Xóa toàn bộ bộ nhớ</button>
+            </div>
+
+            <div id="memoryListContainer" class="overflow-y-auto flex-1 space-y-2 pr-1">
+                <!-- Danh sách item memory sẽ render tại đây -->
+            </div>
+
+            <div class="pt-4 border-t border-slate-200 flex justify-end">
+                <button onclick="closeMemoryModal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl shadow-sm">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT XỬ LÝ SỰ KIỆN GIAO DIỆN -->
     <script>
         let allMatchedItems = [];
         let currentFilter = 'all';
@@ -308,10 +351,18 @@
                         document.getElementById('dataLoadedCount').innerText = Number(data.total_data_items).toLocaleString('vi-VN');
                         document.getElementById('dataLoadedSheets').innerText = data.total_sheets;
                     }
-                });
+                    if (data.data_filename) {
+                        document.getElementById('dataFilename').innerText = data.data_filename;
+                    }
+                    if (data.form_filename) {
+                        document.getElementById('formFilename').innerText = data.form_filename;
+                    }
+                })
+                .catch(() => {});
+            loadMemoryCount();
         });
 
-        // 1. NẠP NHANH DỮ LIỆU
+        // 1. NẠP NHANH DỮ LIỆU CÓ SẴN
         function quickLoadData() {
             showHourglass('Đang nạp toàn bộ sheet từ DATA BIGCOM và đọc FORM BÁO GIÁ...');
             fetch('/api/load_all_default', { method: 'POST' })
@@ -322,6 +373,8 @@
                         document.getElementById('headerDataCount').innerText = Number(data.data_total_items).toLocaleString('vi-VN');
                         document.getElementById('dataLoadedCount').innerText = Number(data.data_total_items).toLocaleString('vi-VN');
                         document.getElementById('dataLoadedSheets').innerText = data.data_total_sheets;
+                        document.getElementById('dataFilename').innerText = data.data_filename;
+                        document.getElementById('formFilename').innerText = data.form_filename;
                         document.getElementById('formLoadedCount').innerText = Number(data.form_total_rows).toLocaleString('vi-VN');
                         document.getElementById('statTotal').innerText = Number(data.form_total_rows).toLocaleString('vi-VN');
                         alert(data.message);
@@ -333,6 +386,63 @@
                     hideHourglass();
                     alert('Lỗi kết nối máy chủ: ' + err);
                 });
+        }
+
+        // TẢI FILE DATA
+        function uploadDataFile(file) {
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('file', file);
+            showHourglass('Đang tải lên và quét các sheet trong file DATA: ' + file.name + '...');
+            fetch('/api/upload_data', {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                hideHourglass();
+                if (data.success) {
+                    document.getElementById('dataFilename').innerText = data.filename;
+                    document.getElementById('dataLoadedCount').innerText = Number(data.data_total_items).toLocaleString('vi-VN');
+                    document.getElementById('dataLoadedSheets').innerText = data.data_total_sheets;
+                    document.getElementById('headerDataCount').innerText = Number(data.data_total_items).toLocaleString('vi-VN');
+                    alert(data.message);
+                } else {
+                    alert('Lỗi nạp file DATA: ' + data.error);
+                }
+            })
+            .catch(err => {
+                hideHourglass();
+                alert('Lỗi kết nối khi nạp file: ' + err);
+            });
+        }
+
+        // TẢI FILE FORM
+        function uploadFormFile(file) {
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('file', file);
+            showHourglass('Đang tải lên và đọc dòng mời thầu từ file FORM: ' + file.name + '...');
+            fetch('/api/upload_form', {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                hideHourglass();
+                if (data.success) {
+                    document.getElementById('formFilename').innerText = data.filename;
+                    document.getElementById('formLoadedCount').innerText = Number(data.form_total_rows).toLocaleString('vi-VN');
+                    document.getElementById('statTotal').innerText = Number(data.form_total_rows).toLocaleString('vi-VN');
+                    alert(data.message);
+                } else {
+                    alert('Lỗi nạp file FORM: ' + data.error);
+                }
+            })
+            .catch(err => {
+                hideHourglass();
+                alert('Lỗi kết nối khi nạp file: ' + err);
+            });
         }
 
         // 2. CHẠY ÁP GIÁ TỰ ĐỘNG
@@ -437,7 +547,7 @@
                     <td class="py-3 px-3 text-right text-slate-600 border-r border-slate-100">
                         ${priceLabStr}
                     </td>
-                    <td class="py-3 px-4 text-slate-600 text-[11px] leading-relaxed">
+                    <td class="py-3 px-4 text-[11px] leading-relaxed border-r border-slate-100 ${item.is_upsized ? 'text-rose-600 font-bold bg-rose-50/50' : 'text-slate-600'}">
                         ${item.note || '-'}
                     </td>
                 </tr>
@@ -448,7 +558,7 @@
                 rowsHtml += `
                 <tr>
                     <td colspan="8" class="text-center py-4 bg-slate-50 text-slate-500 text-xs italic">
-                        Đang hiển thị 250 / ${filtered.length} dòng. Hãy dùng ô tìm kiếm hoặc xuất file Excel để xem toàn bộ 1.507 dòng.
+                        Đang hiển thị 250 / ${filtered.length} dòng. Hãy dùng ô tìm kiếm hoặc xuất file Excel để xem toàn bộ ${filtered.length} dòng.
                     </td>
                 </tr>
                 `;
@@ -596,42 +706,6 @@
                     }
                 });
         }
-
-        // Tự động tải số lượng bộ nhớ khi mở trang
-        document.addEventListener('DOMContentLoaded', loadMemoryCount);
     </script>
-
-    <!-- MODAL BỘ NHỚ HỌC MÁY (MATCH MEMORY) -->
-    <div id="memoryModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl border border-slate-200 flex flex-col max-h-[85vh]">
-            <div class="flex items-center justify-between pb-4 border-b border-slate-200">
-                <div class="flex items-center gap-2">
-                    <span class="text-2xl">🧠</span>
-                    <div>
-                        <h3 class="text-base font-bold text-slate-800">Bộ Nhớ Ghép Nối AI (Match Memory)</h3>
-                        <p class="text-xs text-slate-500">Tự động ghi nhớ các lựa chọn thủ công của kỹ sư để tự động áp dụng 100% cho các lần sau.</p>
-                    </div>
-                </div>
-                <button onclick="closeMemoryModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold p-1">✕</button>
-            </div>
-            
-            <div class="my-4 flex items-center justify-between bg-indigo-50/70 p-3 rounded-xl border border-indigo-100 text-xs text-indigo-900">
-                <span>Hiện đã ghi nhớ <strong id="modalMemoryCount" class="font-extrabold text-indigo-700">0</strong> quy tắc gán vật tư.</span>
-                <button onclick="clearAllMemory()" class="text-rose-600 hover:text-rose-800 font-bold hover:underline">Xóa toàn bộ bộ nhớ</button>
-            </div>
-
-            <div id="memoryListContainer" class="overflow-y-auto flex-1 space-y-2 pr-1">
-                <!-- Danh sách item memory sẽ render tại đây -->
-            </div>
-
-            <div class="pt-4 border-t border-slate-200 flex justify-end">
-                <button onclick="closeMemoryModal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl shadow-sm">
-                    Đóng
-                </button>
-            </div>
-        </div>
-    </div>
-
 </body>
 </html>
-
